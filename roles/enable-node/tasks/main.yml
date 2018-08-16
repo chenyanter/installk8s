@@ -1,0 +1,19 @@
+- name: enable kube-proxy
+  become: yes
+  become_user: root
+  shell: systemctl enable kube-proxy.service
+
+- name: enable kube-kubelet
+  become: yes
+  become_user: root
+  shell: systemctl enable kubelet.service
+
+- name: restart kube-proxy
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-scheduler
+
+- name: restart kube-kubelet
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-scheduler

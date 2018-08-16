@@ -1,0 +1,65 @@
+- name: create kubectl wkdir
+  become: yes
+  become_user: kube
+  shell: mkdir -p /home/kube/installk8s/kubectl
+
+- name: create ca pem for kubectl
+  become: yes
+  become_user: kube
+  copy:
+    src: admin-csr.json
+    dest: /home/kube/installk8s/kubectl/admin-csr.json
+  tags: copyca2kubectl
+
+- name: create kubectl pem
+  become: yes
+  become_user: kube
+  args:
+    chdir: /home/kube/installk8s/kubectl
+  shell: cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin
+  tags: createpem2kubectl
+
+- name: copy kubectl to /usr/bin/
+  become: yes
+  become_user: root
+  copy:
+    src: v1.11.1/kubectl
+    dest: /usr/bin/kubectl
+  tags: copykubectl
+
+- name: chmod +x kubectl
+  become: yes
+  become_user: root
+  shell: chmod +x /usr/bin/kubectl
+
+- name: copy kubectl pem to /etc/kubectl/ssl/
+  become: yes
+  become_user: root
+  args:
+    chdir: /home/kube/installk8s/kubectl
+  shell: mv admin*.pem /etc/kubernetes/ssl/
+
+- name: copy kubeconf script
+  become: yes
+  become_user: kube
+  template:
+    src: script/kubeconfig.sh.j2
+    dest: /home/kube/installk8s/kubectl/kubeconfig.sh
+
+- name: chmod +x /home/kube/installk8s/kubectl/kubeconfig.sh
+  become: yes
+  become_user: kube
+  shell: chmod +x /home/kube/installk8s/kubectl/kubeconfig.sh
+
+- name: create config
+  become: yes
+  become_user: kube
+  shell: bash /home/kube/installk8s/kubectl/kubeconfig.sh
+
+- name: get kube-config
+  become: yes
+  become_user: kube
+  fetch:
+    flat: yes
+    src: /home/kube/.kube/config
+    dest: roles/kubectl/files/config

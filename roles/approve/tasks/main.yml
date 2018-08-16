@@ -1,0 +1,10 @@
+- name: cp approve
+  copy:
+    src: approve.sh
+    dest: /home/kube/installk8s/approve.sh
+
+- name: chmod +x approve.sh
+  shell: chmod +x /home/kube/installk8s/approve.sh
+
+- name: approve
+  shell: bash /home/kube/installk8s/approve.sh

@@ -1,0 +1,172 @@
+- name: mkdir -p /root/installk8s/node
+  become: yes
+  become_user: root
+  shell: mkdir -p /root/installk8s/node/
+
+- name: cp kube-proxy-csr
+  become: yes
+  become_user: root
+  copy:
+    src: kube-proxy-csr.json
+    dest: /root/installk8s/node/kube-proxy-csr.json
+
+- name: create pem for kube proxy
+  become: yes
+  become_user: root
+  args:
+    chdir: /root/installk8s/node/
+  shell: cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes  kube-proxy-csr.json | cfssljson -bare kube-proxy
+
+- name: copy pem for kubernets
+  become: yes
+  become_user: root
+  args:
+    chdir: /root/installk8s/node/
+  shell: mv kube-proxy*.pem /etc/kubernetes/ssl/
+
+- name: cover docker.service
+  become: yes
+  become_user: root
+  copy:
+    src: docker.service
+    dest: /lib/systemd/system/docker.service
+
+- name: change iptale
+  become: yes
+  become_user: root
+  shell: iptables -P FORWARD ACCEPT
+
+- name: clear rclocal
+  become: yes
+  become_user: root
+  shell: sed -i "/FORWARD ACCEPT/d" /etc/rc.local
+
+- name: change iptable in rc.local
+  become: yes
+  become_user: root
+  shell: echo "sleep 60 && /sbin/iptables -P FORWARD ACCEPT" >> /etc/rc.local
+
+- name: change iptable in cmd
+  become: yes
+  become_user: root
+  shell: iptables -F &&  iptables -X &&  iptables -F -t nat &&  iptables -X -t nat
+
+- name: reload docker
+  become: yes
+  become_user: root
+  shell: systemctl daemon-reload
+
+- name: restart docker
+  become: yes
+  become_user: root
+  shell: systemctl restart docker
+  tags: restartdocker
+
+- name: delete tls
+  become: yes
+  become_user: root
+  shell: kubectl delete clusterrolebinding kubelet-bootstrap; echo 0
+
+- name: create kubelet tls
+  become: yes
+  become_user: root
+  shell: kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap; echo 0
+
+- name: create node tls
+  become: yes
+  become_user: root
+  shell: kubectl create clusterrolebinding kubelet-nodes --clusterrole=system:node --group=system:nodes; echo 0
+
+- name: copy kube-proxy and kubelet
+  become: yes
+  become_user: root
+  copy:
+    src: v1.11.1/{{ item }} 
+    dest: /usr/bin/{{ item }}
+  loop:
+    - kube-proxy
+    - kubelet
+
+- name: chmod +x /usr/bin/kube*
+  become: yes
+  become_user: root
+  shell: chmod +x /usr/bin/kube*
+
+- name: cp kubeconfig.sh
+  become: yes
+  become_user: root
+  template:
+    src: script/{{ item }}.j2
+    dest: /root/installk8s/node/{{ item }}
+  loop:
+    - kubeproxyconfig.sh
+    - bootstrapconfig.sh
+
+- name: create kube-proxyconfig
+  become: yes
+  become_user: root
+  shell: /bin/bash /root/installk8s/node/kubeproxyconfig.sh
+
+- name: create bootstrapconfig
+  become: yes
+  become_user: root
+  shell: /bin/bash /root/installk8s/node/bootstrapconfig.sh
+
+- name: mv kubelet.service /etc/systemd/system
+  become: yes
+  become_user: root
+  template:
+    src: kubelet.service.j2
+    dest: /etc/systemd/system/kubelet.service
+
+- name: mv kube-proxy.service /etc/systemd/system
+  become: yes
+  become_user: root
+  template:
+    src: kube-proxy.service.j2
+    dest: /etc/systemd/system/kube-proxy.service
+
+- name: systemctl daemon-reload
+  become: yes
+  become_user: root
+  shell: systemctl daemon-reload
+
+- name: mkdir -p /var/lib/{kubelet, kube-proxy}
+  become: yes
+  become_user: root
+  shell: mkdir -p /var/lib/kubelet /var/lib/kube-proxy
+
+- name: stop kubelet
+  become: yes
+  become_user: root
+  shell: systemctl stop kubelet
+
+- name: del pods
+  become: yes
+  become_user: root
+  shell: docker rm -f $(docker ps -q); mount | grep "/var/lib/kubelet/*" | awk '{print $3}' | xargs umount 1>/dev/null 2>/dev/null; echo 0
+
+- name: clean /var/lib/kubelet
+  become: yes
+  become_user: root
+  shell: rm -rf /var/lib/kubelet/*
+
+- name: restart kubelet
+  become: yes
+  become_user: root
+  shell: systemctl restart kubelet
+
+- name: stop kube-proxy
+  become: yes
+  become_user: root
+  shell: systemctl stop kube-proxy
+
+- name: clean /var/lib/kube-proxy
+  become: yes
+  become_user: root
+  shell: rm -rf /var/lib/kube-proxy/*
+
+- name: restart kube-proxy
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-proxy

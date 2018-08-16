@@ -1,0 +1,75 @@
+- name: create flanneld wkdir
+  become: yes
+  become_user: root
+  shell: mkdir -p /root/installk8s/flanneld
+
+- name: copy flanneld-csr.json
+  become: yes
+  become_user: root
+  copy:
+    src: flanneld-csr.json
+    dest: /root/installk8s/flanneld/
+
+- name: create flanneld pem
+  become: yes
+  become_user: root
+  args:
+    chdir: /root/installk8s/flanneld
+  shell: cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes flanneld-csr.json | cfssljson -bare flanneld
+
+- name: mkdir -p /etc/flanneld/ssl
+  become: yes
+  become_user: root
+  shell: mkdir -p /etc/flanneld/ssl
+
+- name: cp flanneld pem
+  become: yes
+  become_user: root
+  args:
+    chdir: /root/installk8s/flanneld
+  shell: mv flanneld*.pem /etc/flanneld/ssl
+
+- name: cp subnet.sh
+  become: yes
+  become_user: root
+  template:
+    src: subnet.sh.j2
+    dest: /root/installk8s/subnet.sh
+
+- name: set flanneld
+  become: yes
+  become_user: root
+  shell: /bin/bash /root/installk8s/subnet.sh
+
+- name: copy flanneld to path
+  become: yes
+  become_user: root
+  copy:
+    src: v0.10.0/{{ item }}
+    dest: /usr/bin/{{ item }}
+  loop:
+    - flanneld
+    - mk-docker-opts.sh
+
+- name: chmod +x /usr/bin/{flanneld, mk-docker-opts.sh}
+  become: yes
+  become_user: root
+  shell: chmod +x /usr/bin/flanneld /usr/bin/mk-docker-opts.sh
+
+- name: create flanneld.service
+  become: yes
+  become_user: root
+  template:
+    src: flanneld.service.j2
+    dest: /etc/systemd/system/flanneld.service
+  tags: restartflanneld
+
+- name: reload flanneld
+  become: yes
+  become_user: root
+  shell: systemctl daemon-reload
+
+- name: restart flanneld
+  become: yes
+  become_user: root
+  shell: systemctl restart flanneld

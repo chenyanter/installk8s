@@ -1,0 +1,55 @@
+- name: mkdir dir for yml
+  become: yes
+  become_user: root
+  shell: mkdir -p /home/kube/ci-agent/01 /usr/local/java
+
+- name: cp ci-agent
+  become: yes
+  become_user: kube
+  copy:
+    src: buildAgent.zip
+    dest: /home/kube/ci-agent
+
+- name: cp jdk
+  become: yes
+  become_user: root
+  copy:
+    src: jdk-8u151-linux-x64.tar.gz
+    dest: /usr/local/java
+
+- name: install unzip
+  become: yes
+  become_user: root
+  apt:
+    name: unzip
+
+- name: unzip jdk
+  become: yes
+  become_user: root
+  args:
+    chdir: /usr/local/java
+  shell: tar -xvf jdk-8u151-linux-x64.tar.gz
+
+- name: install java
+  become: yes
+  become_user: root
+  shell: update-alternatives --install /usr/bin/java java /usr/local/java/jdk1.8.0_151/bin/java 300
+
+- name: install javac
+  become: yes
+  become_user: root
+  shell: update-alternatives --install /usr/bin/javac javac /usr/local/java/jdk1.8.0_151/bin/javac 300
+
+- name: unzip ci-agent
+  become: yes
+  become_user: kube
+  args:
+    chdir: /home/kube/ci-agent
+  shell: unzip -o buildAgent.zip -d 01/
+
+- name: install ci-agent
+  become: yes
+  become_user: kube
+  args:
+    chdir: /home/kube/ci-agent/01/bin
+  shell: ./install.sh https://ci.kube.com

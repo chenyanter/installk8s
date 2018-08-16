@@ -1,0 +1,22 @@
+ansible_ssh_user: "kube"
+ansible_ssh_pass: "kube"
+ansible_become_pass: "kube"
+host_key_checking: False
+ansible_python_interpreter: "/usr/bin/python3"
+BOOTSTRAP_TOKEN: 784e0dc11b602149ef19a031d3f66d002418
+SERVICE_CIDR: "10.254.0.0/16"
+CLUSTER_CIDR: "172.30.0.0/16"
+NODE_PORT_RANGE: "3000-50000"
+ETCD_ENDPOINTS: "https://172.16.12.100:2379,https://172.16.12.112:2379,https://172.16.12.124:2379"
+FLANNEL_ETCD_PREFIX: "/kubernetes/network"
+CLUSTER_KUBERNETES_SVC_IP: "10.254.0.1"
+CLUSTER_DNS_SVC_IP: "10.254.0.2"
+CLUSTER_DNS_DOMAIN: "cluster.local."
+NODE_IPS: "172.16.12.100 172.16.12.112 172.16.12.124"
+ETCD_NODES: "etcd-host0=https://172.16.12.100:2380,etcd-host1=https://172.16.12.112:2380,etcd-host2=https://172.16.12.124:2380"
+MASTER_IP: "{{ NODE_IP }}"
+MASTER_PORT: 6443
+MASTER_HPORT: 8080
+KUBE_APISERVER: "https://{{ NODE_IP }}:6443"
+GF_SERVER_ROOT_URL: "/api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/"
+K_HOSTS: ["172.16.12.100", "172.16.12.112", "172.16.12.124", "127.0.0.1", "10.254.0.1", "kubernetes", "kubernetes.default", "kubernetes.default.svc", "kubernetes.default.svc.cluster", "kubernetes.default.svc.cluster.local"]

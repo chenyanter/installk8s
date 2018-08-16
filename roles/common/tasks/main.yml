@@ -1,0 +1,59 @@
+- name: stop apiserver
+  become: yes
+  become_user: root
+  shell: systemctl stop kube-apiserver; echo 0
+
+- name: stop scheduler
+  become: yes
+  become_user: root
+  shell: systemctl stop kube-scheduler; echo 0
+
+- name: stop controller-manager
+  become: yes
+  become_user: root
+  shell: systemctl stop kube-controller-manager; echo 0
+
+- name: stop proxy
+  become: yes
+  become_user: root
+  shell: systemctl stop kube-proxy; echo 0
+
+- name: stop kubelet
+  become: yes
+  become_user: root
+  shell: systemctl stop kube-kubelet; echo 0
+
+- name: stop etcd
+  become: yes
+  become_user: root
+  shell: systemctl stop etcd; echo 0
+
+- name: stop flanneld
+  become: yes
+  become_user: root
+  shell: systemctl stop flanneld; echo 0
+
+- name: del kubernetes pem
+  become: yes
+  become_user: root
+  shell: rm -rf /etc/kubernetes/*
+
+- name: del etcd pem
+  become: yes
+  become_user: root
+  shell: rm -rf /etc/etcd/ssl/*
+
+- name: del flanneld pem
+  become: yes
+  become_user: root
+  shell: rm -rf /etc/flanneld/ssl/*
+
+- name: be sure environment is set
+  become: yes
+  become_user: root
+  template:
+    src: environment.sh.j2
+    dest: /etc/profile.d/environment.sh
+  notify:
+    - source environment
+  tags: env

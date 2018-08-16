@@ -1,0 +1,16 @@
+#!/bin/bash
+cd /root/installk8s/node/
+kubectl config set-cluster kubernetes \
+  --certificate-authority=/etc/kubernetes/ssl/ca.pem \
+  --embed-certs=true \
+  --server={{ KUBE_APISERVER }} \
+  --kubeconfig=bootstrap.kubeconfig
+kubectl config set-credentials kubelet-bootstrap \
+  --token={{ BOOTSTRAP_TOKEN }} \
+--kubeconfig=bootstrap.kubeconfig
+kubectl config set-context default \
+  --cluster=kubernetes \
+  --user=kubelet-bootstrap \
+  --kubeconfig=bootstrap.kubeconfig
+kubectl config use-context default --kubeconfig=bootstrap.kubeconfig
+cat bootstrap.kubeconfig > /etc/kubernetes/bootstrap.kubeconfig

@@ -1,0 +1,3 @@
+- hosts: kube-mkca
+  roles:
+    - kube-system

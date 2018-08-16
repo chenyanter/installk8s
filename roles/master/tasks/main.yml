@@ -1,0 +1,75 @@
+- name: copy master
+  become: yes
+  become_user: root
+  copy:
+    src: v1.11.1/{{ item }}
+    dest: /usr/bin/{{ item }}
+  loop:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+    - kubectl
+    - kube-proxy
+    - kubelet
+- name: chmod +x /usr/bin/kube*
+  become: yes
+  become_user: root
+  shell: chmod +x /usr/bin/kube*
+
+- name: copy kubernetes-csr
+  become: yes
+  become_user: root
+  template:
+    src: kubernetes-csr.json.j2
+    dest: /etc/kubernetes/ssl/kubernetes-csr.json
+
+- name: del u
+  become: yes
+  become_user: root
+  shell: sed -i "s/u'/'/g;s/'/\"/g" /etc/kubernetes/ssl/kubernetes-csr.json
+
+- name: create kubernetes pem
+  become: yes
+  become_user: root
+  args:
+    chdir: /etc/kubernetes/ssl/
+  shell: /usr/bin/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem -ca-key=/etc/kubernetes/ssl/ca-key.pem -config=/etc/kubernetes/ssl/ca-config.json -profile=kubernetes kubernetes-csr.json | cfssljson -bare kubernetes
+  tags: createpem
+
+- name: create token
+  become: yes
+  become_user: root
+  template:
+    src: token.csv.j2
+    dest: /etc/kubernetes/token.csv
+
+- name: create kube-apiserver
+  become: yes
+  become_user: root
+  template:
+    src: v1.11.1/{{ item }}.j2
+    dest: /etc/systemd/system/{{ item  }}
+  loop:
+    - kube-apiserver.service
+    - kube-controller-manager.service
+    - kube-scheduler.service
+
+- name: daemon-reload
+  become: yes
+  become_user: root
+  shell: systemctl daemon-reload
+
+- name: restart apiserver
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-apiserver
+
+- name: restart controller-manager
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-controller-manager
+
+- name: restart scheduler
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-scheduler

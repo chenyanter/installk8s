@@ -1,0 +1,67 @@
+- name: cp all file for kubernetes
+  become: yes
+  become_user: root
+  copy:
+    src: R1.2/{{ item.src }}
+    dest: /usr/bin/{{ item.dest }}
+  loop:
+    - { src: 'cfssl-certinfo_linux-amd64', dest: 'cfssl-certinfo' }
+    - { src: 'cfssljson_linux-amd64', dest: 'cfssljson'}
+    - { src: 'cfssl_linux-amd64', dest: 'cfssl' }
+  tags: copy2ca
+
+- name: chmod +x for cfssltools
+  become: yes
+  become_user: root
+  command: chmod +x /usr/bin/{{ item }}
+  loop:
+    - cfssl-certinfo
+    - cfssljson
+    - cfssl
+  tags: chmod
+
+- name: create pem dir
+  become: yes
+  become_user: root
+  file:
+    path: /root/installk8s/
+    state: directory
+  tags: createpemdir
+
+- name: mkdir -p /etc/kubernetes/ssl/
+  become: yes
+  become_user: root
+  shell: mkdir -p /etc/kubernetes/ssl/
+
+- name: cp ca file for mkdirpem
+  become: yes
+  become_user: root
+  copy:
+    src: ca/{{ item }}
+    dest: /etc/kubernetes/ssl/{{ item }}
+  loop:
+    - ca-config.json
+    - ca-csr.json
+  tags: copy2ca
+
+- name: create pem
+  become: yes
+  become_user: root
+  args:
+    chdir: /etc/kubernetes/ssl/
+  shell: /usr/bin/cfssl gencert -initca ca-csr.json | /usr/bin/cfssljson -bare ca
+  tags: createpem
+
+- name: fetch pem to local
+  become: yes
+  become_user: root
+  fetch:
+    flat: yes
+    src: /root/installk8s/{{ item }}
+    dest: roles/distributeca/files/ca/
+  loop:
+    - ca.csr
+    - ca.pem
+    - ca-key.pem
+    - ca-config.json
+    - ca-csr.json

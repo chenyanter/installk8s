@@ -1,0 +1,26 @@
+- name: mkdir dir for yml
+  become: yes
+  become_user: kube
+  shell: mkdir -p /home/kube/installk8s/ymls/
+
+- name: cp ymls
+  become: yes
+  become_user: kube
+  copy:
+    src: kube-system/{{ item.path }}/{{ item.name }}
+    dest: /home/kube/installk8s/ymls/{{ item.name }}
+  loop:
+    - { "path": "coredns", "name": "coredns.yml" }
+    - { "path": "heapster", "name": "grafana.yml" }
+    - { "path": "heapster", "name": "heapster.yml" }
+    - { "path": "heapster", "name": "influxdb.yml" }
+    - { "path": "dashboard", "name": "dashboard.yml" }
+    - { "path": "dashboard", "name": "dashboard-admin.yaml" }
+    - { "path": "dashboard", "name": "kubernetes-dashboard.yaml" }
+
+- name: kubectl create -f .
+  become: yes
+  become_user: kube
+  args:
+    chdir: /home/kube/installk8s/ymls/
+  shell: kubectl create -f .

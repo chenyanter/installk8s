@@ -1,0 +1,33 @@
+- name: mkdir /home/kube/installk8s/labelnode/
+  become: yes
+  become_user: root
+  shell: mkdir -p /home/kube/installk8s/labelnode/
+
+- name: cp labelnode.sh
+  become: yes
+  become_user: root
+  copy:
+    src: labelnode.sh
+    dest: /home/kube/installk8s/labelnode/labelnode.sh
+    mode: 0755
+
+- name: label web_pool=true
+  become: yes
+  become_user: root
+  args:
+    chdir: /home/kube/installk8s/labelnode/
+  shell: bash labelnode.sh web_pool=true
+
+- name: label app_pool=true
+  become: yes
+  become_user: root
+  args:
+    chdir: /home/kube/installk8s/labelnode/
+  shell: bash labelnode.sh app_pool=true
+
+- name: label db_pool=true
+  become: yes
+  become_user: root
+  args:
+    chdir: /home/kube/installk8s/labelnode/
+  shell: bash labelnode.sh db_pool=true

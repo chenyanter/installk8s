@@ -1,0 +1,39 @@
+- name: enable kube-apiserver
+  become: yes
+  become_user: root
+  shell: systemctl enable kube-apiserver.service
+
+- name: enable kube-controller-manager
+  become: yes
+  become_user: root
+  shell: systemctl enable kube-controller-manager.service
+
+- name: enable kube-scheduler
+  become: yes
+  become_user: root
+  shell: systemctl enable kube-scheduler.service
+
+- name: enable etcd
+  become: yes
+  become_user: root
+  shell: systemctl enable etcd.service
+
+  - name: restart kube-apiserver
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-apiserver.service
+
+- name: restart kube-controller-manager
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-controller-manager.service
+
+- name: restart kube-scheduler
+  become: yes
+  become_user: root
+  shell: systemctl restart kube-scheduler.service
+
+- name: restart etcd
+  become: yes
+  become_user: root
+  shell: systemctl restart etcd.service

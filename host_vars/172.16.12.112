@@ -1,0 +1,5 @@
+NODE_NAME: etcd-host1
+NODE_IP: 172.16.12.112
+ansible_ssh_user: kube
+ansible_ssh_pass: kube
+ansible_become_pass: kube

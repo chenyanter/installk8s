@@ -1,0 +1,36 @@
+- name: create ca pem path
+  become: yes
+  become_user: root
+  shell: mkdir -p /etc/kubernetes/ssl/
+
+- name: cp ssl tool for node
+  become: yes
+  become_user: root
+  copy:
+    src: R1.2/{{ item.src }}
+    dest: /usr/bin/{{ item.dest }}
+  loop:
+    - { src: 'cfssl-certinfo_linux-amd64', dest: 'cfssl-certinfo' }
+    - { src: 'cfssljson_linux-amd64', dest: 'cfssljson'}
+    - { src: 'cfssl_linux-amd64', dest: 'cfssl' }
+  tags: copy2ca
+
+- name: chmod +x for ssltool
+  become: yes
+  become_user: root
+  shell: chmod +x /usr/bin/cfssl*
+
+- name: distribute ca pem for kubernetes
+  become: yes
+  become_user: root
+  copy:
+    src: ca/{{ item }}
+    dest: /etc/kubernetes/ssl/{{ item }}
+    mode: 0644
+  loop:
+    - ca.csr
+    - ca.pem
+    - ca-key.pem
+    - ca-config.json
+    - ca-csr.json  
+  tags: copy2ca

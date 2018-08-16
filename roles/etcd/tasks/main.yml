@@ -1,0 +1,87 @@
+- name: create etcd pem path
+  become: yes
+  become_user: root
+  shell: mkdir -p /etc/etcd/ssl/
+
+- name: create etcd pem json path
+  become: yes
+  become_user: root
+  shell: mkdir -p  /root/installk8s/etcd
+
+- name: create ca pem for etcd
+  become: yes
+  become_user: root
+  template:
+    src: etcd-csr.json.j2
+    dest: /etc/kubernetes/ssl/etcd-csr.json
+  tags: copyca2etcd
+
+- name: create etcd to path 
+  become: yes
+  become_user: root
+  copy:
+    src:  3.3.9/{{ item }}
+    dest: /usr/bin/{{ item }}
+  loop:
+    - etcd
+    - etcdctl
+  tags: copyetcdctl
+
+- name: chmod +x etcd
+  become: yes
+  become_user: root
+  shell: chmod +x /usr/bin/etcd*
+  tags: chmodetcd
+
+- name: create etcd pem file
+  become: yes
+  become_user: root
+  args:
+    chdir: /root/installk8s/etcd
+  shell: /usr/bin/cfssl gencert -ca=/etc/kubernetes/ssl/ca.pem  -ca-key=/etc/kubernetes/ssl/ca-key.pem  -config=/etc/kubernetes/ssl/ca-config.json  -profile=kubernetes etcd-csr.json | cfssljson -bare etcd
+  tags: createpem2etcd
+
+- name: copy etcd pem to /etc/etcd/ssl/
+  become: yes
+  become_user: root
+  args:
+    chdir: /root/installk8s/etcd
+  shell: mv etcd*.pem /etc/etcd/ssl
+
+- name: copy etcd.service
+  become: yes
+  become_user: root
+  template:
+    src: etcd.service.j2
+    dest: /etc/systemd/system/etcd.service
+
+- name: reload etcd
+  become: yes
+  become_user: root
+  shell: systemctl daemon-reload
+
+- name: stop etcd
+  become: yes
+  become_user: root
+  shell: systemctl stop etcd
+
+- name: clear etcd data
+  become: yes
+  become_user: root
+  shell: rm -rf /var/lib/etcd
+
+- name: create etcd data path
+  become: yes
+  become_user: root
+  shell: mkdir -p /var/lib/etcd
+  tags: copyetcdservice
+
+- name: enable etcd
+  become: yes
+  become_user: root
+  shell: systemctl enable etcd
+
+- name: restart etcd
+  become: yes
+  become_user: root
+  shell: systemctl restart etcd

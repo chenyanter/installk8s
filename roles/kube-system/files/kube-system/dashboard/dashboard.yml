@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: dashboard
+  name: dashboard
+  namespace: kube-system
+spec:
+  type: NodePort
+  ports:
+  - port: 9090
+    nodePort: 8088
+  selector:
+    k8s-app: kubernetes-dashboard

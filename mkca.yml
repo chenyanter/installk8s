@@ -1,0 +1,7 @@
+- hosts: kube-mkca
+  roles:
+    - mkca
+
+- hosts: kube-node
+  roles:
+    - distributeca

@@ -1,0 +1,17 @@
+#!/bin/bash
+export BOOTSTRAP_TOKEN=784e0dc11b602149ef19a031d3f66d002418
+export SERVICE_CIDR="10.254.0.0/16"
+export CLUSTER_CIDR="172.30.0.0/16"
+export NODE_PORT_RANGE="3000-9000"
+export ETCD_ENDPOINTS="https://172.16.12.100:2379,https://172.16.12.112:2379,https://172.16.12.124:2379"
+export FLANNEL_ETCD_PREFIX="/kubernetes/network"
+export CLUSTER_KUBERNETES_SVC_IP="10.254.0.1"
+export CLUSTER_DNS_SVC_IP="10.254.0.2"
+export CLUSTER_DNS_DOMAIN="cluster.local."
+export NODE_NAME={{ NODE_NAME }}
+export NODE_IP={{ NODE_IP }}
+export NODE_IPS="172.16.12.100 172.16.12.112 172.16.12.124"
+export ETCD_NODES="etcd-host0=https://172.16.12.100:2380,etcd-host1=https://172.16.12.112:2380,etcd-host2=https://172.16.12.124:2380"
+export MASTER_IP="{{ NODE_IP }}"
+export KUBE_APISERVER="https://{{ NODE_IP }}:6443"
+export GF_SERVER_ROOT_URL="/api/v1/proxy/namespaces/kube-system/services/monitoring-grafana/"

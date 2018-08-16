@@ -1,0 +1,12 @@
+- name create ca pem path
+  become: yes
+  become_user: kube
+  shell: mkdir -p /home/kube/.kube/
+
+- name: distribute ca pem for kubernetes
+  become: yes
+  become_user: root
+  copy:
+    src: config
+    dest: /home/kube/.kube/config
+  tags: copykubeconfig

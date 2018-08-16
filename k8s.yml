@@ -1,0 +1,10 @@
+- import_playbook: common.yml
+- import_playbook: mkca.yml
+- import_playbook: etcd.yml
+- import_playbook: kubectl.yml
+- import_playbook: flannel.yml
+- import_playbook: master.yml
+- import_playbook: node.yml
+- import_playbook: enable-master.yml
+- import_playbook: enable-node.yml
+- import_playbook: approve.yml
